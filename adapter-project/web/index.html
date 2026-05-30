@@ -1,0 +1,48 @@
+<!--
+Standalone reference copy of the dashboard. The live version is inlined
+into firmware/webserver.py so the ESP32 can serve it without filesystem
+reads. Edit there for the real thing; keep this in sync as a reference.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Adapter Archive</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: -apple-system, system-ui, sans-serif; background:#0a0a0a; color:#e8e8e8; margin:0; padding:1.5rem; }
+  h1 { font-weight:300; letter-spacing:0.08em; text-transform:uppercase; font-size:1rem; opacity:0.7; }
+  .entry { border:1px solid #1f1f1f; padding:1rem; margin:0.75rem 0; border-radius:4px; }
+  .id { font-family: ui-monospace, monospace; font-size:0.75rem; opacity:0.5; }
+  .ts { font-family: ui-monospace, monospace; font-size:0.9rem; margin:0.25rem 0; }
+  .row { display:flex; gap:1.5rem; font-size:0.85rem; opacity:0.85; margin-top:0.5rem; }
+  .empty { opacity:0.4; font-style:italic; }
+</style>
+</head>
+<body>
+<h1>Adapter Archive</h1>
+<div id="entries"></div>
+<script>
+async function load() {
+  const r = await fetch('/entries.json');
+  const data = await r.json();
+  const root = document.getElementById('entries');
+  if (!data.length) { root.innerHTML = '<p class="empty">no entries yet</p>'; return; }
+  root.innerHTML = data.slice().reverse().map(e => `
+    <div class="entry">
+      <div class="id">${e.id}</div>
+      <div class="ts">${e.timestamp}</div>
+      <div class="row">
+        <span>${e.environment.temperature_c ?? '—'}°C</span>
+        <span>${e.environment.humidity_pct ?? '—'}% RH</span>
+        <span>${e.location.fix ? e.location.lat.toFixed(4)+', '+e.location.lng.toFixed(4) : 'no fix'}</span>
+      </div>
+    </div>
+  `).join('');
+}
+load();
+setInterval(load, 5000);
+</script>
+</body>
+</html>
