@@ -19,6 +19,15 @@ AP_SSID = "ADAPTER-ARCHIVE"
 AP_PASSWORD = "archive2026"   # WPA2 requires 8+ chars; set to "" for open if preferred
 STATUS_LED_PIN = 2            # XIAO D1
 
+# Demo override: when set, every plug-in creates an entry at these coordinates
+# regardless of GPS state. Set to None to use real GPS readings.
+FORCE_LOCATION = {
+    "lat": 51.4994,
+    "lng": -0.1741,
+    "fix": True,
+    "satellites": 12,
+}
+
 
 def start_ap():
     ap = network.WLAN(network.AP_IF)
@@ -65,8 +74,14 @@ def main():
     blink(led, 2)
 
     env_reading, gps_reading = collect_initial_reading()
-    entry = logger.open_entry(env_reading, gps_reading)
-    print("opened entry:", entry["id"], env_reading, gps_reading)
+    if FORCE_LOCATION is not None:
+        gps_reading = dict(FORCE_LOCATION)
+        print("FORCE_LOCATION override applied")
+    if gps_reading.get("fix"):
+        entry = logger.open_entry(env_reading, gps_reading)
+        print("opened entry:", entry["id"], env_reading, gps_reading)
+    else:
+        print("no GPS fix at boot - not opening entry; reading:", env_reading)
     blink(led, 3)
 
     led.value(1)  # solid on while serving

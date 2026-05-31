@@ -2,6 +2,7 @@
 
 import time
 import dht
+import machine
 from machine import Pin, UART
 
 import micropyGPS
@@ -46,6 +47,8 @@ class GPS:
             else:
                 time.sleep_ms(10)
 
+        self._try_sync_rtc_from_gps()
+
         if self._parser.fix_type > 1 and self._parser.latitude[0] != 0:
             self._last_fix = {
                 "lat": self._parser.latitude[0] if self._parser.latitude[1] == "N" else -self._parser.latitude[0],
@@ -54,6 +57,34 @@ class GPS:
                 "satellites": self._parser.satellites_in_use,
             }
         return self._last_fix
+
+    def _try_sync_rtc_from_gps(self):
+        """If GPS has valid UTC date+time and our RTC isn't set yet, sync it.
+
+        Strict bounds (2025-2040). Without these, a corrupt NMEA sentence
+        from a freshly-batteried GPS chip can poison the RTC with values
+        like 2080-01-06 (GPS epoch + rollover artefact).
+        """
+        rtc = machine.RTC()
+        if rtc.datetime()[0] >= 2025:
+            return  # already set (by GPS earlier, or by the phone)
+        try:
+            day, month, year_2digit = self._parser.date
+            hours, minutes, seconds = self._parser.timestamp
+        except (ValueError, TypeError):
+            return
+        if year_2digit == 0:
+            return  # no GPS time yet
+        year = 2000 + year_2digit
+        if not (2025 <= year <= 2040):
+            return
+        if not (1 <= month <= 12 and 1 <= day <= 31):
+            return
+        if not (0 <= hours <= 23 and 0 <= minutes <= 59 and 0 <= int(seconds) <= 60):
+            return
+        rtc.datetime((year, month, day, 0,
+                      int(hours), int(minutes), int(seconds), 0))
+        print("RTC synced from GPS:", year, month, day, hours, minutes, seconds)
 
     @property
     def last(self):

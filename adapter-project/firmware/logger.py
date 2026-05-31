@@ -3,6 +3,7 @@
 import json
 import os
 import time
+import machine
 
 LOG_PATH = "log.json"
 
@@ -55,3 +56,44 @@ def close_entry(entry_id):
                 e["duration_seconds"] = time.ticks_diff(time.ticks_ms(), started) // 1000
             break
     _save(entries)
+
+
+def set_time_from_iso(iso_str):
+    """Set the board RTC from an ISO 8601 string like '2026-05-30T22:17:30'.
+
+    The board has no battery-backed clock, so the phone pushes its clock
+    when the dashboard loads. Returns True on success.
+    """
+    try:
+        date_part, time_part = iso_str.split("T")
+        y, mo, d = (int(x) for x in date_part.split("-"))
+        h, mi, s = (int(x) for x in time_part.split(":")[:3])
+    except (ValueError, IndexError):
+        return False
+    if y < 2025:
+        return False
+    machine.RTC().datetime((y, mo, d, 0, h, mi, s, 0))
+    return True
+
+
+def restamp_recent_if_unset():
+    """Re-stamp any entry whose timestamp looks wrong.
+
+    "Wrong" = year outside 2025-2040 (catches both '2000-01-01' from an
+    unset RTC and bad values like '2080' from corrupt GPS data on boot).
+    Runs right after the phone syncs the clock.
+    """
+    entries = _load()
+    changed = False
+    now = _now_iso()
+    for e in entries:
+        ts = e.get("timestamp", "")
+        try:
+            year = int(ts[:4])
+        except ValueError:
+            continue
+        if year < 2025 or year > 2040:
+            e["timestamp"] = now
+            changed = True
+    if changed:
+        _save(entries)
