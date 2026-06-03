@@ -7,10 +7,11 @@ from machine import Pin, UART
 
 import micropyGPS
 
-DHT_PIN = 3       # XIAO D2 → GPIO3
+DHT_PIN = 38      # WROOM-1 dev board: header label "D3" → GPIO38
+                  # (the board's D# labels are Arduino-style, not GPIO numbers)
 GPS_UART_ID = 1
-GPS_TX_PIN = 43   # XIAO D6 → GPIO43 (ESP TX → GPS RX)
-GPS_RX_PIN = 44   # XIAO D7 → GPIO44 (ESP RX ← GPS TX)
+GPS_TX_PIN = 43   # WROOM-1 "TX" / XIAO D6 → GPIO43 (ESP TX → GPS RX)
+GPS_RX_PIN = 44   # WROOM-1 "RX" / XIAO D7 → GPIO44 (ESP RX ← GPS TX)
 GPS_BAUD = 9600
 
 
