@@ -9,7 +9,7 @@ import time
 import dht
 from machine import Pin
 
-DATA_PIN = 3   # XIAO D2 → GPIO3
+DATA_PIN = 38  # WROOM-1 dev board "D3" → GPIO38 (was 3 on XIAO D2)
 
 sensor = dht.DHT22(Pin(DATA_PIN))
 

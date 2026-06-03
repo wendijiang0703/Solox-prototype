@@ -21,12 +21,7 @@ STATUS_LED_PIN = 2            # XIAO D1
 
 # Demo override: when set, every plug-in creates an entry at these coordinates
 # regardless of GPS state. Set to None to use real GPS readings.
-FORCE_LOCATION = {
-    "lat": 51.4994,
-    "lng": -0.1741,
-    "fix": True,
-    "satellites": 12,
-}
+FORCE_LOCATION = None
 
 
 def start_ap():
