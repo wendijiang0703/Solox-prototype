@@ -1,0 +1,13 @@
+# Custom partition table for FireBeetle 2 ESP32-S3 (16 MB flash).
+# Gives the app 3 MB and LittleFS ~12.9 MB for photos + entries.json.
+# At ~50 KB per JPEG (OV3660 SVGA q10), that's room for ~260 photos —
+# we cap at 30 in firmware but having headroom prevents fragmentation pain.
+#
+# To use: in Arduino IDE → Tools → Partition Scheme → "Custom".
+# The IDE picks up this file automatically because it lives next to the .ino.
+#
+# Name,   Type, SubType, Offset,   Size,     Flags
+nvs,      data, nvs,     0x9000,   0x5000,
+otadata,  data, ota,     0xe000,   0x2000,
+app0,     app,  ota_0,   0x10000,  0x300000,
+spiffs,   data, spiffs,  0x310000, 0xCF0000,
